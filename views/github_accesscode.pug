@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  p Your GitHub access token is
+  code #{access_token_data}
+
+    a(href="/") Back to Home
+
+  form(action='/github_user', method='POST')
+      input(type='hidden', name='github_access_token', id='github_access_token', value=access_token)
+      input(type='submit', name='submit', id='submit', value="Fetch user details from GitHub")
+
