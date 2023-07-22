@@ -3,6 +3,8 @@ const router = express.Router();
 const baseURL = process.env.BASE_URL;
 const githubClientID = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+const {OAuth2Client} = require('google-auth-library');
 const githubLink = `https://github.com/login/oauth/authorize?client_id=${githubClientID}&scope=read:user,user:email`;
 
 console.log(baseURL);
@@ -15,7 +17,7 @@ async function exchangeCode(code) {
     code
   };
 
-  const url = new URL('https://github.com/login/oauth/access_token');
+    const url = new URL('https://github.com/login/oauth/access_token');
   url.searchParams.append('client_id', params.client_id);
   url.searchParams.append('client_secret', params.client_secret);
   url.searchParams.append('code', params.code);
@@ -48,7 +50,7 @@ async function userInfo(access_token) {
 }
 
 // Routes
-router.get('/', (req, res) => res.render('index', { title: 'Express', github_link: githubLink }));
+router.get('/', (req, res) => res.render('index', { title: 'Express', github_link: githubLink, google_client_id: process.env.GOOGLE_CLIENT_ID}));
 
 router.get("/github-callback", async (req, res) => {
   const callbackCode = req.query.code;
@@ -102,6 +104,27 @@ router.post("/github_user", async(req, res) => {
       }
     })
 
+})
+
+router.post("/google-callback", async (req, res) => {
+  const googleOAuthClient = new OAuth2Client();
+  async function verify() {
+    console.log("Verifying ID Token");
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: req.body.credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    console.log("Verified ID Token");
+    return ticket.getPayload();
+  }
+  return verify()
+    .then(idkwhatthisis => {
+      return res.status(200).json(idkwhatthisis);
+    })
+    .catch(error => {
+    console.error(error);
+    res.status(500).json({error: error.message});
+  });
 })
 
 // Exported modules

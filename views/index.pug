@@ -4,4 +4,54 @@ block content
   h1= title
   p Welcome to #{title}
   a(href=github_link) Login with GitHub
+  script(src="https://accounts.google.com/gsi/client")
+  script(type="text/javascript").
+    const googleLoginCallback = (response) => {
+      // handle JWT token inside response...
+      // https://developers.google.com/identity/gsi/web/guides/handle-credential-responses-js-functions#handle_credential_response
+    };
+    // https://developers.google.com/identity/gsi/web/reference/js-reference#IdConfiguration
+    window.google.accounts.id.initialize({
+    client_id: "#{google_client_id}",
+      ux_mode: "redirect",
+      callback: googleLoginCallback,
+      login_uri: "http://localhost:3000/google-callback"
+      });
+
+    const createFakeGoogleWrapper = () => {
+    const googleLoginWrapper = document.createElement("div");
+    // Or you can simple hide it in CSS rule for custom-google-button
+    googleLoginWrapper.style.display = "none";
+    googleLoginWrapper.classList.add("custom-google-button");
+
+    // Add the wrapper to body
+    document.body.appendChild(googleLoginWrapper);
+
+    // Use GSI javascript api to render the button inside our wrapper
+    // You can ignore the properties because this button will not appear
+    window.google.accounts.id.renderButton(googleLoginWrapper, {
+    type: "icon",
+      width: "200",
+      });
+
+    const googleLoginWrapperButton =
+      googleLoginWrapper.querySelector("div[role=button]");
+
+    return {
+      click: () => {
+    googleLoginWrapperButton.click();
+    },
+    };
+    };
+  script(type="text/javascript").
+    const googleButtonWrapper = createFakeGoogleWrapper();
+      window.handleGoogleLogin = () => {
+        // Use wrapper click to prevent Illegal invocation exception
+        googleButtonWrapper.click();
+        // This will open GSI login and after success you will have
+        // a response on googleLoginCallback method previously created
+      };
+  button.btn.btn-light.bordr.rounded-2.px-4.py-2.fw-semibold.my-2.d-flex.align-items-center.justify-content-center(style="width: 100%; max-width: 400px" onclick="handleGoogleLogin()") Sign in with Google
+
+
 
